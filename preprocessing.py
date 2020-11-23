@@ -29,47 +29,72 @@ for file in midi_files:
             continue
 
 
+def sample_midi_track(track, interval):
+    """
+    Samples from a single midi track, used for creating piano roll representation
+
+    :param track: the midi track to sample from
+    :param interval: the length of the interval in ticks used for sampling
+    :return: a list of notes representing samples in the midi file taken every
+    interval ticks
+    """
+
+    time = 0
+    track_length = sum([m.time for m in track])
+    msg_index = 1 # message 0 is metadata
+    msg = track[msg_index]
+    samples = []
+    next_sample_time = 30
+
+    while next_sample_time < track_length:
+        while time < next_sample_time:
+            msg_index += 1
+            if msg_index >= len(track):
+                return np.array(samples, dtype=np.int32)
+            msg = track[msg_index]
+            time += msg.time
+        samples.append(msg.note)
+        next_sample_time += interval
+
+    return np.array(samples, dtype=np.int32)
 
 
-# unfinished attempt at building piano roll representations of these midi files:
+def piano_roll(midi_file):
+    """
+    This should build the piano roll representation of the midi file
+    :param midi_file:
+    :return:
+    """
+    num_tracks = len(midi_file.tracks)
+    tracks = midi_file.tracks[1:num_tracks]  # drop the metadata track
+
+    ticks_per_beat = midi_file.ticks_per_beat
+    ticks_per_eigth_note = ticks_per_beat / 8  # ticks per eighth note
+
+    for t in tracks:
+        # all tracks should have the same length
+        track_length = sum([m.time for m in track])
+        print("track total length in ticks: ", track_length)
+
+        samples = sample_midi_track(t, ticks_per_eigth_note)
+
+        # we want this so that all the tracks are the same length and we
+        # can concatenate into a single list of vectors
+        print(np.shape(samples))
+
+    return np.array([], dtype=np.int32)
+
+    # TODO test/debug sample_midi_file() so that it works correctly and all tracks from the
+    #  same midi file have the same number of samples
+
+    # TODO concatenate all samples of tracks from a song into a single list of tokens where each
+    #  token represents all notes being played at the current tick
 
 
-# there are at most 5 meaningful tracks in these files, so the tokens
-# in the piano roll rep will have at most 5 notes in them
 
-f = midi_files[0] # look at the first midi file
-num_tracks = len(f.tracks)
-tracks = f.tracks[1:num_tracks] # drop the metadata track
 
-# get the length in ticks of each track (should all be nearly the same)
-track_lengths = [sum([m.time for m in track]) for track in tracks]
-max_track_length = max(track_lengths)
+pr = piano_roll(midi_files[0])
 
-ticks_per_beat = f.ticks_per_beat
-ticks_per_eigth_note = ticks_per_beat / 8 # ticks per eighth note
-samples = max_track_length / ticks_per_eigth_note # total number of piano roll samples needed
-
-piano_roll = np.zeros((int(samples), 1))
-
-# now go through tracks at ticks_per_eigth_note intervals and
-# find all of the currently playing notes and concatenate them into
-# a vector which goes in piano-roll at the corresponding time step
-
-# we know that messages don't overlap in a track, so we don't actually need the
-# start and stop messages, we just need to know the note value and the start time
-
-track = tracks[0] # example track to process
-simple_track = []
-time = 0
-for msg in track:
-    if msg.type == 'note_on':
-        continue
-    elif msg.type == 'note_off':
-        simple_track.append([time, msg.note]) # start time, pitch
-        time += msg.time
-
-# simple_track is now a track representation where each note is represented
-# as [start time in ticks, pitch value]
 
 
 
