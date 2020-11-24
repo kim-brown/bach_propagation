@@ -46,9 +46,30 @@ def play_midi(midi_file):
 if __name__ == "__main__":
 
     script_dir = os.path.dirname(__file__)
-    rel_path = "data/Bach/Fugue/Fugue1.mid"
+    rel_path = "data/Bach/Fugue/Fugue20.mid"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     with open(abs_file_path) as song_file:
         
         play_midi(song_file)
+        #based on listening for 30 sec may not be accurate, i'm not good at flat keys
+        #Fugue1 is C Major
+        #Fugue2 is C minor
+        #Fugue3 is Db Major?
+        #Fugue4 is Ab Major?
+        #Fugue5 is D Major
+        #Fugue6 is D minor
+        #Fugue7 is Bb Major
+        #Fugue8 is weird but also i lowkey dig it Eb?
+        #Fugue9 is E minor
+        #Fugue10 is E major
+        #Fugue11 is F minor?
+        #Fugue12 is 12 tone :o C minor if i have to guess
+        #Fugue13 is Db Major? 
+        #Fugue14 is F# minor?
+        #Fugue15 is G major
+        #Fugue16 is Eb major
+        #Fugue17 is Ab Major
+        #Fugue18 is Ab Major
+        #Fugue19 is A Major
+        #Fugue20 is A minor

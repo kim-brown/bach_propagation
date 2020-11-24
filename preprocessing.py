@@ -1,37 +1,10 @@
 from mido import MidiFile
+from mido import MetaMessage
 from play import play_midi
 import os
 import music21
 import numpy as np
 # https://mido.readthedocs.io/en/latest/
-
-data_dir = 'data/Bach/Fugue'
-
-midi_files = []
-
-for file in os.listdir(data_dir):
-    if file.endswith(".mid"):
-        path = os.path.join(data_dir, file)
-        try:
-            midi_files.append(MidiFile(path))
-        except OSError:
-            continue
-        except EOFError:
-            continue
-
-max_tracks = 0
-for file in midi_files:
-    print("Processing file ", file)
-    print(normalize(file))
-    #score = music21.converter.parse("data/Bach/Fugue/"+file)
-    #k = score.analyze('key')
-    #print("file key", k)
-    for i, track in enumerate(file.tracks):
-        max_tracks = max(max_tracks, len(file.tracks))
-        #print('Track {}: {}'.format(i, track.name))
-        for msg in track:
-            #print(msg)
-            continue
 
 def normalize(midi_file):
     """
@@ -43,13 +16,55 @@ def normalize(midi_file):
     """
 
     #TODO: normalize midi_file so it's in C
-    s = music21.midi.translate.midiFileToStream(midi_file) #not working for some reason... 
+    #s = music21.midi.translate.midiFileToStream(midi_file) #need to convert to Stream to normalize
     #"MidiFile Object has no attribute 'ticksPerQuarterNote'"
-    k = s.analyze('key')
+    """k = s.analyze('key')
     i = interval.Interval(k.tonic, pitch.Pitch('C'))
-    sNew = s.transpose(i)
-    #TODO: normalize midi_file so the tempos the same
-    return sNew
+    sNew = s.transpose(i)"""
+    #TODO: normalize midi_file so the tempos the same -- done in for msg in track I think?
+    #The meta message ‘set_tempo’ can be used to change tempo during a song.
+    """tempo = int((60.0 / bpm) * 1000000)
+    track.append(MetaMessage('set_tempo', tempo=tempo))"""
+
+    return midi
+    #return sNew #music21.midi.translate.streamToMidiFile(sNew)
+
+data_dir = 'data/Bach/Fugue'
+
+midi_files = []
+
+for file in os.listdir(data_dir):
+    if file.endswith(".mid"):
+        path = os.path.join(data_dir, file)
+        #score = music21.converter.parse(path) #Error: 'badly formed midi string: missing leading MTrk'
+        #key = score.analyze('key')
+        #print(key)
+        try:
+            midi_files.append(MidiFile(path))
+        except OSError:
+            continue
+        except EOFError:
+            continue
+
+max_tracks = 0
+for file in midi_files:
+    print("Processing file ", file)
+    #print(normalize(file))
+    #score = music21.converter.parse("data/Bach/Fugue/"+file)
+    #k = score.analyze('key')
+    #print("file key", k)
+    for i, track in enumerate(file.tracks):
+        max_tracks = max(max_tracks, len(file.tracks))
+        #print('Track {}: {}'.format(i, track.name))
+        #I think this makes all the songs the same tempo? not sure
+        for msg in track:
+            if isinstance(msg, MetaMessage): 
+                if msg.type == 'set_tempo':
+                    tempo = int((60.0 / 120) * 1000000) #60/bpm
+                    msg = MetaMessage('set_tempo', tempo=tempo)
+                print(msg)
+            continue
+
 
 
 def sample_midi_track(track, interval):
