@@ -52,24 +52,24 @@ if __name__ == "__main__":
     with open(abs_file_path) as song_file:
         
         play_midi(song_file)
-        #based on listening for 30 sec may not be accurate, i'm not good at flat keys
+        #based on listening for 30 sec + educated guesses
         #Fugue1 is C Major
         #Fugue2 is C minor
         #Fugue3 is Db Major?
-        #Fugue4 is Ab Major?
+        #Fugue4 is Db Minor
         #Fugue5 is D Major
         #Fugue6 is D minor
-        #Fugue7 is Bb Major
-        #Fugue8 is weird but also i lowkey dig it Eb?
-        #Fugue9 is E minor
-        #Fugue10 is E major
-        #Fugue11 is F minor?
-        #Fugue12 is 12 tone :o C minor if i have to guess
-        #Fugue13 is Db Major? 
+        #Fugue7 is Eb Major
+        #Fugue8 is weird but also i lowkey dig it Eb minor?
+        #Fugue9 is E Major
+        #Fugue10 is E minor
+        #Fugue11 is F major
+        #Fugue12 is 12 tone :o F minor if i have to guess
+        #Fugue13 is F# Major? 
         #Fugue14 is F# minor?
-        #Fugue15 is G major
-        #Fugue16 is Eb major
+        #Fugue15 is G Major
+        #Fugue16 is G minor
         #Fugue17 is Ab Major
-        #Fugue18 is Ab Major
+        #Fugue18 is Ab minor
         #Fugue19 is A Major
         #Fugue20 is A minor
