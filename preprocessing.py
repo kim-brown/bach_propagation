@@ -1,6 +1,7 @@
 from mido import MidiFile
 from play import play_midi
 import os
+import music21
 import numpy as np
 # https://mido.readthedocs.io/en/latest/
 
@@ -21,12 +22,34 @@ for file in os.listdir(data_dir):
 max_tracks = 0
 for file in midi_files:
     print("Processing file ", file)
+    print(normalize(file))
+    #score = music21.converter.parse("data/Bach/Fugue/"+file)
+    #k = score.analyze('key')
+    #print("file key", k)
     for i, track in enumerate(file.tracks):
         max_tracks = max(max_tracks, len(file.tracks))
         #print('Track {}: {}'.format(i, track.name))
         for msg in track:
             #print(msg)
             continue
+
+def normalize(midi_file):
+    """
+    this should take a single midi track and normalize it so that it is in C and the tempos
+    are somewhat in line with the other ones
+
+    :param midi_file: midi track to change
+    :return: the midi track with the sounds normalized
+    """
+
+    #TODO: normalize midi_file so it's in C
+    s = music21.midi.translate.midiFileToStream(midi_file) #not working for some reason... 
+    #"MidiFile Object has no attribute 'ticksPerQuarterNote'"
+    k = s.analyze('key')
+    i = interval.Interval(k.tonic, pitch.Pitch('C'))
+    sNew = s.transpose(i)
+    #TODO: normalize midi_file so the tempos the same
+    return sNew
 
 
 def sample_midi_track(track, interval):
@@ -57,7 +80,6 @@ def sample_midi_track(track, interval):
         next_sample_time += interval
 
     return np.array(samples, dtype=np.int32)
-
 
 def piano_roll(midi_file):
     """

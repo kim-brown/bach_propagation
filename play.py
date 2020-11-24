@@ -50,4 +50,5 @@ if __name__ == "__main__":
     abs_file_path = os.path.join(script_dir, rel_path)
 
     with open(abs_file_path) as song_file:
+        
         play_midi(song_file)
