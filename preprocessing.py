@@ -88,7 +88,7 @@ def sample_midi_track(track, interval, num_samples):
     cur_time = 0
     next_msg_time = 0
     arr_index = 0
-    samples = np.zeros(num_samples)
+    samples = np.zeros(num_samples, dtype=np.int32)
     msgs = track[1:] # exclude track[0], which is metadata
     
     for msg in msgs:
@@ -113,10 +113,13 @@ def piano_roll(midi_file):
     :return:
     """
     tracks = midi_file.tracks[1:]  # drop the metadata track
-    ticks_per_eighth_note = midi_file.ticks_per_beat / 2  # ticks per eighth note
+    # it seems like midi always treats a quarter note as a beat, regardless of time signature
+    ticks_per_eighth_note = midi_file.ticks_per_beat / 2
     print(ticks_per_eighth_note)
     
-    # TODO: we want no more than 3 tracks, so if there are more, randomly choose 3 of them to work with
+    # if there are more than 3 tracks, randomly choose 3 of them to work with
+    if len(tracks) > 3:
+        tracks = np.random.choice(tracks, 3, replace=False)
     
     # the tracks seem to be slightly different lengths for some reason, so take
     # the max length to determine the number of samples
@@ -127,13 +130,13 @@ def piano_roll(midi_file):
     num_samples = np.ceil(max_length / ticks_per_eighth_note).astype('int')
 
     piano_roll = np.array([sample_midi_track(track, ticks_per_eighth_note, num_samples) for track in tracks])
+    piano_roll = np.transpose(piano_roll)
     
-    # TODO concatenate the samples from all tracks into a single list of tokens where each
-    #  token represents all notes being played at the current tick
+    # sort the notes at each timestep from lowest to highest and concatenate them into a single string
+    piano_roll = np.sort(piano_roll)
+    piano_roll = np.array(["-".join([str(note) for note in notes]) for notes in piano_roll])
 
-    # ie somehow flatten the first dimension of piano_roll by combining note values
-
-    print(piano_roll.shape)
+    print(piano_roll[:50])
     return piano_roll
 
 
