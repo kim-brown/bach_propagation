@@ -1,5 +1,4 @@
-import music21
-
+import time
 import pygame
 import os
 
@@ -22,8 +21,8 @@ def play_music(music_file):
     while pygame.mixer.music.get_busy():
         # check if playback has finished
         clock.tick(30)
-# pick a midi music file you have ...
-# (if not in working folder use full path)
+
+    time.sleep(1)
 
 def play_midi(midi_file):
     freq = 44100    # audio CD quality

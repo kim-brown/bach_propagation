@@ -1,5 +1,4 @@
-from mido import MidiFile
-from mido import MetaMessage
+from mido import MidiFile, MetaMessage
 from play import play_midi
 import os
 import music21
@@ -102,7 +101,7 @@ def sample_midi_track(track, interval, num_samples):
             cur_time += interval
             arr_index += 1
         
-    print(samples[len(samples)-20:])
+    # print(samples[len(samples)-20:])
     return samples
 
 
@@ -115,7 +114,7 @@ def piano_roll(midi_file):
     tracks = midi_file.tracks[1:]  # drop the metadata track
     # it seems like midi always treats a quarter note as a beat, regardless of time signature
     ticks_per_eighth_note = midi_file.ticks_per_beat / 2
-    print(ticks_per_eighth_note)
+    # print(ticks_per_eighth_note)
     
     # if there are more than 3 tracks, randomly choose 3 of them to work with
     if len(tracks) > 3:
@@ -123,8 +122,8 @@ def piano_roll(midi_file):
     
     # the tracks seem to be slightly different lengths for some reason, so take
     # the max length to determine the number of samples
-    for track in tracks:
-        print(sum([m.time for m in track]))
+    # for track in tracks:
+        # print(sum([m.time for m in track]))
     
     max_length = max([sum([m.time for m in track]) for track in tracks])
     num_samples = np.ceil(max_length / ticks_per_eighth_note).astype('int')
@@ -136,10 +135,11 @@ def piano_roll(midi_file):
     piano_roll = np.sort(piano_roll)
     piano_roll = np.array(["-".join([str(note) for note in notes]) for notes in piano_roll])
 
-    print(piano_roll[:50])
+    # print(piano_roll[:50])
     return piano_roll
 
 
-midi_files = get_files('data/Bach/Fugue')
-for midi_file in midi_files:
-    piano_roll(midi_file)
+if __name__ == "__main__":
+    midi_files = get_files('data/Bach/Fugue')
+    for midi_file in midi_files:
+        piano_roll(midi_file)
