@@ -7,6 +7,8 @@ import numpy as np
 
 # https://mido.readthedocs.io/en/latest/
 
+train_test_split = 0.8
+
 def get_files(data_dir):
     """
     :param data_dir: string, name of directory containing midi files
@@ -138,8 +140,59 @@ def piano_roll(midi_file):
     # print(piano_roll[:50])
     return piano_roll
 
+def get_batch(inputs, labels, start, batch_size):
+    """
+    Batch the inputs and labels.
+    :param inputs: a list or numpy array
+    :param labels: a list or numpy array of the same length
+    :param start: index at which to begin the batch
+    :param batch_size: size of the batch
+    :return: batched_inputs, batched_labels
+    """
+    return inputs[start:start+batch_size], labels[start:start+batch_size]
 
-if __name__ == "__main__":
+def build_vocab(tokens):
+    """
+    Create a dictionary which maps different tokens to ids
+    :params: tokens (string representation of notes playing at a timestep)
+    :return: token_to_id: dictionary from token -> token_id
+    """
+    token_to_id = {}
+    highest_id = 0
+    for t in tokens:
+        if t not in token_to_id:
+            token_to_id[t] = highest_id
+            highest_id += 1
+    return token_to_id
+
+def tokens_to_ids(tokens, token_to_id):
+    ids = []
+    for t in tokens:
+        if t in token_to_id:
+            ids.append(token_to_id[t])
+        else:
+            ids.append(0) # not sure if there are any consequences to this
+    return ids
+
+
+def get_data():
+    """
+    Combine all piano rolls into one array, divide into training + testing data, and inputs + labels.
+    :return: train_inputs, train_labels, test_inputs, test_labels
+    """
     midi_files = get_files('data/Bach/Fugue')
-    for midi_file in midi_files:
-        piano_roll(midi_file)
+    if len(midi_files) > 0:
+        inputs = piano_roll(midi_files[0])
+    rolled = []
+    for f in range(1, len(midi_files)):
+        roll = piano_roll(midi_files[f])
+        rolled.append(roll)
+    all_notes = np.concatenate(rolled)
+    train_length = int(train_test_split * len(all_notes))
+    train_inputs = all_notes[:train_length-1]
+    token_to_id = build_vocab(train_inputs)
+    train_input_ids = tokens_to_ids(train_inputs, token_to_id)
+    train_label_ids = tokens_to_ids(all_notes[1:train_length], token_to_id)
+    test_input_ids = tokens_to_ids(all_notes[train_length:-1], token_to_id)
+    test_label_ids = tokens_to_ids(all_notes[train_length+1:], token_to_id)
+    return train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id
