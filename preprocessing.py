@@ -7,37 +7,7 @@ import numpy as np
 
 # https://mido.readthedocs.io/en/latest/
 
-def get_data():
-    """
-    This function should be called within the main program train/test loop
-    to get all the preprocessed data
-
-    :return: piano roll representation of all songs in corpus split into training/testing data/labels
-             and a dictionary from every unique token in the corpus to an integer id
-    """
-
-    all_midi_files = []
-
-    pieces = ['aof', 'brandenb', 'cantatas', 'cellosui', 'chorales', 'fugues', 'gold', 'invent',
-              'organ', 'organcho', 'partitas', 'sinfon', 'suites', 'wtcbki', 'wtcbkii']
-
-    for p in pieces:
-        data_dir = 'data/bach/' + p
-        for midi_file in get_files(data_dir):
-            all_midi_files.append(midi_file)
-
-    print(len(all_midi_files), " Midi Files processed for training")
-
-    song_data = [piano_roll(m) for m in all_midi_files]
-
-    # TODO build a dictionary from each unique token in the corpus to an integer id (do we need this?)
-    vocab = {}
-
-    # TODO build these lists (based on language modelling assignment)
-    #  also do we need to make sure that every symbol in testing set appears in training set?
-    train_data, test_data, train_labels, test_labels = [], [], [], []
-
-    return train_data, test_data, train_labels, test_labels, vocab
+train_test_split = 0.8
 
 def get_files(data_dir):
     """
@@ -170,8 +140,75 @@ def piano_roll(midi_file):
     # print(piano_roll[:50])
     return piano_roll
 
+def get_batch(inputs, labels, start, batch_size):
+    """
+    Batch the inputs and labels.
+    :param inputs: a list or numpy array
+    :param labels: a list or numpy array of the same length
+    :param start: index at which to begin the batch
+    :param batch_size: size of the batch
+    :return: batched_inputs, batched_labels
+    """
+    return inputs[start:start+batch_size], labels[start:start+batch_size]
+
+def build_vocab(tokens):
+    """
+    Create a dictionary which maps different tokens to ids
+    :params: tokens (string representation of notes playing at a timestep)
+    :return: token_to_id: dictionary from token -> token_id
+    """
+    token_to_id = {}
+    highest_id = 0
+    for t in tokens:
+        if t not in token_to_id:
+            token_to_id[t] = highest_id
+            highest_id += 1
+    return token_to_id
+
+def tokens_to_ids(tokens, token_to_id):
+    ids = []
+    for t in tokens:
+        if t in token_to_id:
+            ids.append(token_to_id[t])
+        else:
+            ids.append(0) # not sure if there are any consequences to this
+    return ids
+
+
+def get_data():
+    """
+    Combine all piano rolls into one array, divide into training + testing data, and inputs + labels.
+    :return: train_inputs, train_labels, test_inputs, test_labels
+    """
+
+    midi_files = []
+
+    pieces = ['aof', 'brandenb', 'cantatas', 'cellosui', 'chorales', 'fugues', 'gold', 'invent',
+              'organ', 'organcho', 'partitas', 'sinfon', 'suites', 'wtcbki', 'wtcbkii']
+
+    for p in pieces:
+        data_dir = 'data/bach/' + p
+        for midi_file in get_files(data_dir):
+            midi_files.append(midi_file)
+
+    print(len(midi_files), " Midi Files processed for training")
+
+    if len(midi_files) > 0:
+        inputs = piano_roll(midi_files[0])
+    rolled = []
+    for f in range(1, len(midi_files)):
+        roll = piano_roll(midi_files[f])
+        rolled.append(roll)
+    all_notes = np.concatenate(rolled)
+    train_length = int(train_test_split * len(all_notes))
+    train_inputs = all_notes[:train_length-1]
+    token_to_id = build_vocab(train_inputs)
+    train_input_ids = tokens_to_ids(train_inputs, token_to_id)
+    train_label_ids = tokens_to_ids(all_notes[1:train_length], token_to_id)
+    test_input_ids = tokens_to_ids(all_notes[train_length:-1], token_to_id)
+    test_label_ids = tokens_to_ids(all_notes[train_length+1:], token_to_id)
+    return train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id
+
 
 if __name__ == "__main__":
-
-    train_data, test_data, train_labels, test_labels, vocab = get_data()
-
+    train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id = get_data()
