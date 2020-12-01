@@ -7,6 +7,38 @@ import numpy as np
 
 # https://mido.readthedocs.io/en/latest/
 
+def get_data():
+    """
+    This function should be called within the main program train/test loop
+    to get all the preprocessed data
+
+    :return: piano roll representation of all songs in corpus split into training/testing data/labels
+             and a dictionary from every unique token in the corpus to an integer id
+    """
+
+    all_midi_files = []
+
+    pieces = ['aof', 'brandenb', 'cantatas', 'cellosui', 'chorales', 'fugues', 'gold', 'invent',
+              'organ', 'organcho', 'partitas', 'sinfon', 'suites', 'wtcbki', 'wtcbkii']
+
+    for p in pieces:
+        data_dir = 'data/bach/' + p
+        for midi_file in get_files(data_dir):
+            all_midi_files.append(midi_file)
+
+    print(len(all_midi_files), " Midi Files processed for training")
+
+    song_data = [piano_roll(m) for m in all_midi_files]
+
+    # TODO build a dictionary from each unique token in the corpus to an integer id (do we need this?)
+    vocab = {}
+
+    # TODO build these lists (based on language modelling assignment)
+    #  also do we need to make sure that every symbol in testing set appears in training set?
+    train_data, test_data, train_labels, test_labels = [], [], [], []
+
+    return train_data, test_data, train_labels, test_labels, vocab
+
 def get_files(data_dir):
     """
     :param data_dir: string, name of directory containing midi files
@@ -140,6 +172,6 @@ def piano_roll(midi_file):
 
 
 if __name__ == "__main__":
-    midi_files = get_files('data/Bach/Fugue')
-    for midi_file in midi_files:
-        piano_roll(midi_file)
+
+    train_data, test_data, train_labels, test_labels, vocab = get_data()
+
