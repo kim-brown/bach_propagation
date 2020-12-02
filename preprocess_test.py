@@ -53,7 +53,7 @@ def piano_roll_to_midi(piano_roll, interval):
 
 # get a midi file from the data dir
 script_dir = os.path.dirname(__file__)
-rel_path = 'data/Bach/Fugue/Fugue1.mid'
+rel_path = 'data/Bach/cantatas/jesu1.mid'
 abs_file_path = os.path.join(script_dir, rel_path)
 midi_file = MidiFile(abs_file_path)
 

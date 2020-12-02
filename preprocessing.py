@@ -40,23 +40,31 @@ def normalize(midi_file):
     """
 
     # TODO: normalize midi_file so it's in C
-    # s = music21.midi.translate.midiFileToStream(midi_file) #need to convert to Stream to normalize
-    # "MidiFile Object has no attribute 'ticksPerQuarterNote'"
-    """k = s.analyze('key')
-    i = interval.Interval(k.tonic, pitch.Pitch('C'))
-    sNew = s.transpose(i)"""
-    # TODO: normalize midi_file so the tempos the same -- done in for msg in track I think?
-    # The meta message ‘set_tempo’ can be used to change tempo during a song.
+    # TODO: normalize midi_file so the tempos the same
+    for i, track in enumerate(midi_file.tracks):
+        #max_tracks = max(max_tracks, len(midi_file.tracks))
+        # print('Track {}: {}'.format(i, track.name))
+        # I think this makes all the songs the same tempo? not sure
+        for msg in track:
+            if isinstance(msg, MetaMessage):
+                if msg.type == 'set_tempo':
+                    tempo = int((60.0 / 120) * 1000000)  # 60/bpm
+                    msg = MetaMessage('set_tempo', tempo=tempo)
+                if msg.type == 'key_signature':
+                    msg = MetaMessage('key_signature', key = 'C') #maybe converts everything to C that has a Key?
+                #print(msg)
+            continue
     """tempo = int((60.0 / bpm) * 1000000)
     track.append(MetaMessage('set_tempo', tempo=tempo))"""
 
     return midi_file
     # return sNew #music21.midi.translate.streamToMidiFile(sNew)
 
-"""
-max_tracks = 0
-for file in midi_files:
+
+"""max_tracks = 0
+for file in get_files('data/bach/aof'):
     print("Processing file ", file)
+    normalize(file)
     # print(normalize(file))
     # score = music21.converter.parse("data/Bach/Fugue/"+file)
     # k = score.analyze('key')
@@ -71,8 +79,8 @@ for file in midi_files:
                     tempo = int((60.0 / 120) * 1000000)  # 60/bpm
                     msg = MetaMessage('set_tempo', tempo=tempo)
                 print(msg)
-            continue
-"""
+            continue"""
+
 
 
 def sample_midi_track(track, interval, num_samples):
@@ -113,6 +121,7 @@ def piano_roll(midi_file):
     :param midi_file:
     :return:
     """
+    midi_file = normalize(midi_file) #new! may break things, but supposed to get everythign in C an = 120
     tracks = midi_file.tracks[1:]  # drop the metadata track
     # it seems like midi always treats a quarter note as a beat, regardless of time signature
     ticks_per_eighth_note = midi_file.ticks_per_beat / 2
