@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from preprocessing import *
 from pylab import show, plot, grid, title, xlabel, ylabel
+import scipy.stats
 
 
 class Model(tf.keras.Model):
@@ -108,8 +109,7 @@ def test(model, test_inputs, test_labels):
         predicted = tf.argmax(probs, 1)
         correct_predictions += tf.reduce_sum(tf.cast(tf.equal(labels, predicted), tf.float32))
 
-    accuracy = correct_predictions / len(test_inputs)
-    return accuracy
+    return correct_predictions
 
 
 def main():
@@ -121,8 +121,12 @@ def main():
     losses = train(m, train_inputs, train_labels)
     visualize_loss(losses)
 
-    accuracy = test(m, test_inputs, test_labels)
-    print("Test Set Accuracy: ", accuracy)
+    num_correct = test(m, test_inputs, test_labels)
+    print("Test Set Percent Accuracy: ", num_correct / len(test_inputs))
+
+    # (low p-value indicates a small probability of choosing labels randomly and getting this many correct)
+    p_value = 1 - scipy.stats.binom.cdf(num_correct-1, len(test_inputs), 1 / token_vocab_size)
+    print("p-value: ", p_value)
 
 
 if __name__ == '__main__':
