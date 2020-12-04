@@ -47,15 +47,14 @@ def piano_roll_to_midi(piano_roll, interval):
             track3.append(Message('note_on', note=int(vector[2]), velocity=60, time=delta3))
             track3.append(Message('note_off', note=int(vector[2]), velocity=60, time=interval))
             delta3 = 0
-
+    
     return mid
 
 
 # get a midi file from the data dir
-script_dir = os.path.dirname(__file__)
-rel_path = 'data/Bach/cantatas/jesu1.mid'
-abs_file_path = os.path.join(script_dir, rel_path)
-midi_file = MidiFile(abs_file_path)
+
+original_path = "./data/Bach/organ/catech2.mid"
+midi_file = MidiFile(original_path)
 
 # normalize the tempo and key
 midi_file = normalize(midi_file)
@@ -71,20 +70,18 @@ midi.tracks.append(midi_file.tracks[0])
 # save to a file and play
 rel_path = "preprocess_test.mid"
 midi.save(rel_path)
-abs_file_path = os.path.join(script_dir, rel_path)
 
-with open(abs_file_path) as song_file:
+with open(rel_path) as song_file:
+    print("playing processed")
     play_midi(song_file)
 
 # delete the saved midi file
-os.remove("preprocess_test.mid")
+os.remove(rel_path)
 
 
 # play the original (before preprocessing):
-rel_path = "data/Bach/Fugue/Fugue1.mid"
-abs_file_path = os.path.join(script_dir, rel_path)
-
-with open(abs_file_path) as song_file:
+with open(original_path) as song_file:
+    print("playing original")
     play_midi(song_file)
 
 

@@ -94,24 +94,28 @@ def sample_midi_track(track, interval, num_samples):
     interval ticks
     """
 
-    cur_time = 0
+    # this offsets our sampling so that it occurs not exactly on every eighth
+    # note, but slightly after (shifted by 1/4 of an eighth note). the notes in
+    # the midi files aren't quantized, so doing this ensures the model doesn't
+    # miss notes that occur ever-so-slightly after the beat.
+    cur_time = interval // 4
+    
     next_msg_time = 0
     arr_index = 0
     samples = np.zeros(num_samples, dtype=np.int32)
-    msgs = track[1:] # exclude track[0], which is metadata
     
-    for msg in msgs:
+    for msg in track:
+        print(msg)
         next_msg_time += msg.time
         while cur_time < next_msg_time:
             # if msg.type=='note_off', add the note (since this means it's
             # currently on and will be turned off at next_msg_time).
             # otherwise, it remains 0 (i.e., the note is off)
-            if msg.type=='note_off':
+            if msg.type=='note_off' or (msg.type=='note_on' and msg.velocity==0):
                 samples[arr_index] = msg.note
             cur_time += interval
             arr_index += 1
         
-    # print(samples[len(samples)-20:])
     return samples
 
 
@@ -132,11 +136,10 @@ def piano_roll(midi_file):
         tracks = np.random.choice(tracks, 3, replace=False)
     
     # the tracks seem to be slightly different lengths for some reason, so take
-    # the max length to determine the number of samples
-    # for track in tracks:
-        # print(sum([m.time for m in track]))
+    # the max length to determine the number of samples.
     
-    max_length = max([sum([m.time for m in track]) for track in tracks])
+    # see comments in sample_midi_track for why we add ticks_per_eighth_note // 4
+    max_length = max([sum([m.time for m in track]) for track in tracks]) + ticks_per_eighth_note // 4
     num_samples = np.ceil(max_length / ticks_per_eighth_note).astype('int')
 
     piano_roll = np.array([sample_midi_track(track, ticks_per_eighth_note, num_samples) for track in tracks])
@@ -146,7 +149,7 @@ def piano_roll(midi_file):
     piano_roll = np.sort(piano_roll)
     piano_roll = np.array(["-".join([str(note) for note in notes]) for notes in piano_roll])
 
-    # print(piano_roll[:50])
+    print(piano_roll[:50])
     return piano_roll
 
 def get_batch(inputs, labels, start, batch_size):
