@@ -23,7 +23,7 @@ def get_files(data_dir):
             #print(key)
             try:
                 midi_files.append(MidiFile(path))
-                print(path)
+                #print(path)
             except OSError:
                 continue
             except EOFError:
@@ -105,7 +105,7 @@ def sample_midi_track(track, interval, num_samples):
     samples = np.zeros(num_samples, dtype=np.int32)
     
     for msg in track:
-        print(msg)
+        #print(msg)
         next_msg_time += msg.time
         while cur_time < next_msg_time:
             # if msg.type=='note_off', add the note (since this means it's
@@ -149,8 +149,9 @@ def piano_roll(midi_file):
     piano_roll = np.sort(piano_roll)
     piano_roll = np.array(["-".join([str(note) for note in notes]) for notes in piano_roll])
 
-    print(piano_roll[:50])
+    #print(piano_roll[:50])
     return piano_roll
+
 
 def get_batch(inputs, labels, start, batch_size):
     """
@@ -162,6 +163,7 @@ def get_batch(inputs, labels, start, batch_size):
     :return: batched_inputs, batched_labels
     """
     return inputs[start:start+batch_size], labels[start:start+batch_size]
+
 
 def build_vocab(tokens):
     """
@@ -224,3 +226,8 @@ def get_data():
 
 if __name__ == "__main__":
     train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id = get_data()
+
+    print(np.shape(train_input_ids))
+    print(np.shape(train_label_ids))
+    print(np.shape(test_input_ids))
+    print(np.shape(test_input_ids))
