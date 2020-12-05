@@ -62,6 +62,7 @@ def normalize(midi_file):
         "Em":-7, "Fbm": -7, "E#m":4, "Fm":4, "F#m":3, "Gbm":3, "Gm":2, "G#m":1, "Abm":1,
         "Am":0, "A#m": -1, "Bbm":-1, "Bm":-2, "Cbm":-2} 
         #dictionary saying how many steps should we be transposing, major pieces are normalized to C, minor to A
+        #Valid values: A A#m Ab Abm Am B Bb Bbm Bm C C# C#m Cb Cm D D#m Db Dm E Eb Ebm Em F F# F#m Fm G G#m Gb Gm
         difference = reference[key]
         print("difference:", difference)
         for msg in track:
