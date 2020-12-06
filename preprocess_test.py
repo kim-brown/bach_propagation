@@ -51,12 +51,13 @@ def piano_roll_to_midi(piano_roll, interval):
     return mid
 
 
+
 # get a midi file from the data dir
 
-original_path = "./data/Bach/organ/catech2.mid"
+original_path = "./data/Bach/aof/cnt2.mid"
 midi_file = MidiFile(original_path)
 
-# normalize the tempo and key
+# tests normalize the tempo and key
 midi_file = normalize(midi_file)
 
 # create piano roll representation from the midi file
@@ -65,6 +66,7 @@ piano_roll = piano_roll(midi_file)
 # convert piano roll back into a MidiFile object with same meta messages as original
 ticks_per_eighth_note = midi_file.ticks_per_beat / 2
 midi = piano_roll_to_midi(piano_roll, int(ticks_per_eighth_note))
+midi.ticks_per_beat = midi_file.ticks_per_beat
 midi.tracks.append(midi_file.tracks[0])
 
 # save to a file and play

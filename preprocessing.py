@@ -22,7 +22,7 @@ def get_files(data_dir):
             #key = score.analyze('key')
             #print(key)
             try:
-                midi_files.append(MidiFile(path))
+                midi_files.append(MidiFile(path)) #adds the normalized data
                 #print(path)
             except OSError:
                 continue
@@ -39,23 +39,36 @@ def normalize(midi_file):
     :return: the midi track with the sounds normalized
     """
 
-    # TODO: normalize midi_file so it's in C
-    # TODO: normalize midi_file so the tempos the same
+    key = "C" #if there's no key
+    
     for i, track in enumerate(midi_file.tracks):
         #max_tracks = max(max_tracks, len(midi_file.tracks))
         # print('Track {}: {}'.format(i, track.name))
         # I think this makes all the songs the same tempo? not sure
-        for msg in track:
+        # TODO: normalize midi_file so the tempos the same
+        midi_file.ticks_per_beat = 120
+        # TODO: normalize midi_file so it's in C
+        
+        
+        for msg in track: 
             if isinstance(msg, MetaMessage):
-                if msg.type == 'set_tempo':
-                    tempo = int((60.0 / 120) * 1000000)  # 60/bpm
-                    msg = MetaMessage('set_tempo', tempo=tempo)
                 if msg.type == 'key_signature':
-                    msg = MetaMessage('key_signature', key = 'C') #maybe converts everything to C that has a Key?
-                #print(msg)
+                    key = msg.key #determines key of song
+                    
+        reference = {"B#": 0, "C":0, "C#": -1, "Db": -1, "D":-2, "D#":-3, "Eb":-3, 
+        "E":-4, "Fb": -4, "E#":-5, "F":-5, "F#":-6, "Gb":-6, "G":5, "G#":4, "Ab":4,
+        "A":3, "A#": 2, "Bb":2, "B":1, "Cb":1,
+        "B#m": -3, "Cm":-3, "C#m": -4, "Dbm": -4, "Dm":-5, "D#m":-6, "Ebm":-6, 
+        "Em":-7, "Fbm": -7, "E#m":4, "Fm":4, "F#m":3, "Gbm":3, "Gm":2, "G#m":1, "Abm":1,
+        "Am":0, "A#m": -1, "Bbm":-1, "Bm":-2, "Cbm":-2} 
+        #dictionary saying how many steps should we be transposing, major pieces are normalized to C, minor to A
+        #Valid values: A A#m Ab Abm Am B Bb Bbm Bm C C# C#m Cb Cm D D#m Db Dm E Eb Ebm Em F F# F#m Fm G G#m Gb Gm
+        difference = reference[key]
+        for msg in track:
+            if msg.type == "note_on":
+                    msg.note += difference
             continue
-    """tempo = int((60.0 / bpm) * 1000000)
-    track.append(MetaMessage('set_tempo', tempo=tempo))"""
+
 
     return midi_file
     # return sNew #music21.midi.translate.streamToMidiFile(sNew)
@@ -125,7 +138,6 @@ def piano_roll(midi_file):
     :param midi_file:
     :return:
     """
-    midi_file = normalize(midi_file) #new! may break things, but supposed to get everythign in C an = 120
     tracks = midi_file.tracks[1:]  # drop the metadata track
     # it seems like midi always treats a quarter note as a beat, regardless of time signature
     ticks_per_eighth_note = midi_file.ticks_per_beat / 2
@@ -203,7 +215,7 @@ def get_data():
     for p in pieces:
         data_dir = 'data/bach/' + p
         for midi_file in get_files(data_dir):
-            midi_files.append(midi_file)
+            midi_files.append(normalize(midi_file)) #normalized file 
 
     print(len(midi_files), " Midi Files processed for training")
 

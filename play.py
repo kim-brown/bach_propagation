@@ -2,6 +2,7 @@ import time
 import pygame
 import os
 
+
 # below functions are taken from here: https://github.com/sarthak15169/Deep-Music/blob/master/play.py
 # just to play around with the midi files, this is not our code!!
 
