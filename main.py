@@ -9,12 +9,12 @@ class Model(tf.keras.Model):
     def __init__(self, token_vocab_size):
         super(Model, self).__init__()
         
-        self.batch_size = 600
+        self.batch_size = 300
         self.window_size = 20
         self.windows_per_batch = int(self.batch_size / self.window_size)
 
         self.embedding_size = 64
-        self.learning_rate = 0.01
+        self.learning_rate = 1e-3
         self.optimizer = tf.keras.optimizers.Adam(self.learning_rate)
         self.token_vocab_size = token_vocab_size
         self.hidden_layer_size = 2000
@@ -75,7 +75,7 @@ def train(model, train_inputs, train_labels):
     losses = []
 
     for i in range(num_batches):
-        print("TRAIN BATCH ", i+1, "/", num_batches)
+        # print("TRAIN BATCH ", i+1, "/", num_batches)
         inputs, labels = get_batch(train_inputs, train_labels, i * model.batch_size, model.batch_size)
 
         # reshape inputs into windows
@@ -118,7 +118,15 @@ def main():
     token_vocab_size = len(token_to_id)
     m = Model(token_vocab_size)
 
-    losses = train(m, train_inputs, train_labels)
+    # TODO should we shuffle the inputs?
+
+    epochs = 15
+    losses = []
+    for i in range(epochs):
+        print("Train epoch ", i + 1, " out of ", epochs)
+        epoch_losses = train(m, train_inputs, train_labels)
+        losses += epoch_losses
+
     visualize_loss(losses)
 
     num_correct = test(m, test_inputs, test_labels)
