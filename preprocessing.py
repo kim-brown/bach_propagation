@@ -22,7 +22,7 @@ def get_files(data_dir):
             #key = score.analyze('key')
             #print(key)
             try:
-                midi_files.append(MidiFile(path))
+                midi_files.append(MidiFile(path)) #adds the normalized data
                 #print(path)
             except OSError:
                 continue
@@ -54,7 +54,7 @@ def normalize(midi_file):
             if isinstance(msg, MetaMessage):
                 if msg.type == 'key_signature':
                     key = msg.key #determines key of song
-                    print(key)
+                    
         reference = {"B#": 0, "C":0, "C#": -1, "Db": -1, "D":-2, "D#":-3, "Eb":-3, 
         "E":-4, "Fb": -4, "E#":-5, "F":-5, "F#":-6, "Gb":-6, "G":5, "G#":4, "Ab":4,
         "A":3, "A#": 2, "Bb":2, "B":1, "Cb":1,
@@ -64,7 +64,6 @@ def normalize(midi_file):
         #dictionary saying how many steps should we be transposing, major pieces are normalized to C, minor to A
         #Valid values: A A#m Ab Abm Am B Bb Bbm Bm C C# C#m Cb Cm D D#m Db Dm E Eb Ebm Em F F# F#m Fm G G#m Gb Gm
         difference = reference[key]
-        print("difference:", difference)
         for msg in track:
             if msg.type == "note_on":
                     msg.note += difference
@@ -139,7 +138,6 @@ def piano_roll(midi_file):
     :param midi_file:
     :return:
     """
-    #midi_file = normalize(midi_file) #new! may break things, but supposed to get everythign in C an = 120
     tracks = midi_file.tracks[1:]  # drop the metadata track
     # it seems like midi always treats a quarter note as a beat, regardless of time signature
     ticks_per_eighth_note = midi_file.ticks_per_beat / 2
@@ -217,7 +215,7 @@ def get_data():
     for p in pieces:
         data_dir = 'data/bach/' + p
         for midi_file in get_files(data_dir):
-            midi_files.append(midi_file)
+            midi_files.append(normalize(midi_file)) #normalized file 
 
     print(len(midi_files), " Midi Files processed for training")
 
