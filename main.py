@@ -127,7 +127,7 @@ def main():
 
         # TODO should we shuffle the inputs?
 
-        epochs = 1
+        epochs = 15
         losses = []
         for i in range(epochs):
             print("Train epoch ", i + 1, " out of ", epochs)
