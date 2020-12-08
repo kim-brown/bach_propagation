@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import sys
 import tensorflow as tf
 from preprocessing import *
 from pylab import show, plot, grid, title, xlabel, ylabel
@@ -113,28 +115,40 @@ def test(model, test_inputs, test_labels):
 
 
 def main():
-    train_inputs, train_labels, test_inputs, test_labels, token_to_id = get_data()
+    if len(sys.argv) != 2 or sys.argv[1] not in {"TRAIN", "COMPOSE"}:
+        print("Usage: python main.py <TRAIN/COMPOSE>")
+        exit()
+    
+    if sys.argv[1] == "TRAIN":
+        train_inputs, train_labels, test_inputs, test_labels, token_to_id = get_data()
 
-    token_vocab_size = len(token_to_id)
-    m = Model(token_vocab_size)
+        token_vocab_size = len(token_to_id)
+        m = Model(token_vocab_size)
 
-    # TODO should we shuffle the inputs?
+        # TODO should we shuffle the inputs?
 
-    epochs = 15
-    losses = []
-    for i in range(epochs):
-        print("Train epoch ", i + 1, " out of ", epochs)
-        epoch_losses = train(m, train_inputs, train_labels)
-        losses += epoch_losses
+        epochs = 1
+        losses = []
+        for i in range(epochs):
+            print("Train epoch ", i + 1, " out of ", epochs)
+            epoch_losses = train(m, train_inputs, train_labels)
+            losses += epoch_losses
+        
+        # save model weights
+        m.save_weights('saved_weights')
 
-    visualize_loss(losses)
+        visualize_loss(losses)
 
-    num_correct = test(m, test_inputs, test_labels)
-    print("Test Set Percent Accuracy: ", num_correct / len(test_inputs))
+        num_correct = test(m, test_inputs, test_labels)
+        print("Test Set Percent Accuracy: ", num_correct / len(test_inputs))
 
-    # (low p-value indicates a small probability of choosing labels randomly and getting this many correct)
-    p_value = 1 - scipy.stats.binom.cdf(num_correct-1, len(test_inputs), 1 / token_vocab_size)
-    print("p-value: ", p_value)
+        # (low p-value indicates a small probability of choosing labels randomly and getting this many correct)
+        p_value = 1 - scipy.stats.binom.cdf(num_correct-1, len(test_inputs), 1 / token_vocab_size)
+        print("p-value: ", p_value)
+    else:
+        model = create_model()
+        model.load_weights('saved_weights')
+        # TODO: compose music
 
 
 if __name__ == '__main__':
