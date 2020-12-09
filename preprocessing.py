@@ -193,7 +193,8 @@ def build_vocab(tokens):
     for t in tokens:
         if t not in token_to_id:
             token_to_id[t] = highest_id
-            id_to_token[highest_id] = token_to_id[t]
+            # id_to_token[highest_id] = token_to_id[t]
+            id_to_token[highest_id] = t
             highest_id += 1
     return token_to_id, id_to_token
 

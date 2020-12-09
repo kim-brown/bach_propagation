@@ -51,40 +51,40 @@ def piano_roll_to_midi(piano_roll, interval):
     return mid
 
 
+if __name__ == "__main__":
+    # get a midi file from the data dir
 
-# get a midi file from the data dir
+    original_path = "./data/Bach/aof/cnt2.mid"
+    midi_file = MidiFile(original_path)
 
-original_path = "./data/Bach/aof/cnt2.mid"
-midi_file = MidiFile(original_path)
+    # tests normalize the tempo and key
+    midi_file = normalize(midi_file)
 
-# tests normalize the tempo and key
-midi_file = normalize(midi_file)
+    # create piano roll representation from the midi file
+    piano_roll = piano_roll(midi_file)
 
-# create piano roll representation from the midi file
-piano_roll = piano_roll(midi_file)
+    # convert piano roll back into a MidiFile object with same meta messages as original
+    ticks_per_eighth_note = midi_file.ticks_per_beat / 2
+    midi = piano_roll_to_midi(piano_roll, int(ticks_per_eighth_note))
+    midi.ticks_per_beat = midi_file.ticks_per_beat
+    midi.tracks.append(midi_file.tracks[0])
 
-# convert piano roll back into a MidiFile object with same meta messages as original
-ticks_per_eighth_note = midi_file.ticks_per_beat / 2
-midi = piano_roll_to_midi(piano_roll, int(ticks_per_eighth_note))
-midi.ticks_per_beat = midi_file.ticks_per_beat
-midi.tracks.append(midi_file.tracks[0])
+    # save to a file and play
+    rel_path = "preprocess_test.mid"
+    midi.save(rel_path)
 
-# save to a file and play
-rel_path = "preprocess_test.mid"
-midi.save(rel_path)
+    with open(rel_path) as song_file:
+        print("playing processed")
+        play_midi(song_file)
 
-with open(rel_path) as song_file:
-    print("playing processed")
-    play_midi(song_file)
-
-# delete the saved midi file
-os.remove(rel_path)
+    # delete the saved midi file
+    os.remove(rel_path)
 
 
-# play the original (before preprocessing):
-with open(original_path) as song_file:
-    print("playing original")
-    play_midi(song_file)
+    # play the original (before preprocessing):
+    with open(original_path) as song_file:
+        print("playing original")
+        play_midi(song_file)
 
 
 

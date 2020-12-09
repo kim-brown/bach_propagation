@@ -7,6 +7,7 @@ from pylab import show, plot, grid, title, xlabel, ylabel
 from random import seed
 from random import randint
 import scipy.stats
+from preprocess_test import piano_roll_to_midi
 
 
 class Model(tf.keras.Model):
@@ -160,7 +161,7 @@ def main():
         embedding = tf.nn.embedding_lookup(m.E, inputs)
         probs = None
         
-        for i in range(800):
+        for i in range(200):
             #embedding = tf.reshape(embedding, [2, 64])
             # RNN layer
             whole_seq_out, final_state = m.layer1(tf.expand_dims(embedding, axis=1), initial_state=initial_state)
@@ -170,7 +171,15 @@ def main():
             probs = m.dense_layer2(m.dense_layer1(final_state))
 
         print("MAX: ", tf.math.argmax(probs))
-            #print("FINAL SEQ: ", i, " ", final_seq)
+        # print("FINAL SEQ: ", i, " ", final_seq)
+
+        out_sequence = tf.math.argmax(probs, 1)
+        pr = list(map(lambda x: id_to_token[x.numpy()], out_sequence))
+        midi_file = piano_roll_to_midi(pr, 60)
+        midi_file.ticks_per_beat = 120
+        midi_file.save("output_test.mid")
+
+
 
     # generate music by feeding a short seed sequence into our trained model. We generate new tokens
     # from the output distribution from our softmax and feed the new tokens back into our model. We used

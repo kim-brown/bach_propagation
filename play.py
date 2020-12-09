@@ -47,6 +47,7 @@ if __name__ == "__main__":
 
     script_dir = os.path.dirname(__file__)
     rel_path = "data/Bach/cantatas/jesu1.mid"
+    rel_path = "output_test.mid"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     with open(abs_file_path) as song_file:
