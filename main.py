@@ -149,7 +149,7 @@ def main():
         print("p-value: ", p_value)
     else:
         #m = tf.saved_model.load('saved_model')
-        m = Model(8146)
+        m = Model(len(token_to_id))
         m.load_weights('weights').expect_partial()
 
         # Choose a random piece starter to compose the rest of the song from

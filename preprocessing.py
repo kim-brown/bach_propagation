@@ -143,7 +143,9 @@ def piano_roll(midi_file):
     # it seems like midi always treats a quarter note as a beat, regardless of time signature
     ticks_per_eighth_note = midi_file.ticks_per_beat / 2
     # print(ticks_per_eighth_note)
-    
+
+    np.random.seed(len(tracks[0])) # make preprocessing deterministic
+
     # if there are more than 3 tracks, randomly choose 3 of them to work with
     if len(tracks) > 3:
         tracks = np.random.choice(tracks, 3, replace=False)
@@ -249,9 +251,10 @@ def get_data():
 
 
 if __name__ == "__main__":
-    train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id = get_data()
+    train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id, id_to_token, piece_starters = get_data()
 
     print(np.shape(train_input_ids))
     print(np.shape(train_label_ids))
     print(np.shape(test_input_ids))
-    print(np.shape(test_input_ids))
+    print(np.shape(test_label_ids))
+    print(len(token_to_id))
