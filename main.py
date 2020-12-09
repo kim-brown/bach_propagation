@@ -79,7 +79,7 @@ def train(model, train_inputs, train_labels):
     num_batches = int(len(train_inputs) / model.batch_size)
     losses = []
 
-    for i in range(3):
+    for i in range(num_batches):
         # print("TRAIN BATCH ", i+1, "/", num_batches)
         inputs, labels = get_batch(train_inputs, train_labels, i * model.batch_size, model.batch_size)
 
@@ -129,7 +129,7 @@ def main():
     if sys.argv[1] == "TRAIN":
         # TODO should we shuffle the inputs?
         m = Model(token_vocab_size)
-        epochs = 1
+        epochs = 8
         losses = []
         for i in range(epochs):
             print("Train epoch ", i + 1, " out of ", epochs)
@@ -154,7 +154,7 @@ def main():
         m.load_weights('weights').expect_partial()
 
         # Choose a random piece starter to compose the rest of the song from
-        seed(1)
+        seed(5)
         inputs = tf.convert_to_tensor(piece_starters[randint(0, len(piece_starters))])
         # generate piece with 200 tokens
         initial_state = None

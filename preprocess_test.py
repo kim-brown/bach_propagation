@@ -34,14 +34,14 @@ def piano_roll_to_midi(piano_roll, interval):
             track1.append(Message('note_off', note=int(vector[0]), velocity=60, time=interval))
             delta1 = 0
 
-        if vector[1] == '0':
+        if len(vector) < 2 or vector[1] == '0':
             delta2 += interval
         else:
             track2.append(Message('note_on', note=int(vector[1]), velocity=60, time=delta2))
             track2.append(Message('note_off', note=int(vector[1]), velocity=60, time=interval))
             delta2 = 0
 
-        if vector[2] == '0':
+        if len(vector) < 3 or vector[2] == '0':
             delta3 += interval
         else:
             track3.append(Message('note_on', note=int(vector[2]), velocity=60, time=delta3))
