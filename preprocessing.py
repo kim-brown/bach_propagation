@@ -8,6 +8,7 @@ import numpy as np
 # https://mido.readthedocs.io/en/latest/
 
 train_test_split = 0.8
+piece_starter_len = 80 # num tokens to start the model with for composing music
 
 def get_files(data_dir):
     """
@@ -182,14 +183,17 @@ def build_vocab(tokens):
     Create a dictionary which maps different tokens to ids
     :params: tokens (string representation of notes playing at a timestep)
     :return: token_to_id: dictionary from token -> token_id
+    :return: id_to_token: dictionary from token_id -> token
     """
     token_to_id = {}
+    id_to_token = {}
     highest_id = 0
     for t in tokens:
         if t not in token_to_id:
             token_to_id[t] = highest_id
+            id_to_token[highest_id] = token_to_id[t]
             highest_id += 1
-    return token_to_id
+    return token_to_id, id_to_token
 
 def tokens_to_ids(tokens, token_to_id):
     ids = []
@@ -200,40 +204,48 @@ def tokens_to_ids(tokens, token_to_id):
             ids.append(0) # not sure if there are any consequences to this
     return ids
 
+def get_pieces():
+    """
+    Get all midi files.
+    :return: list of normalized midi files
+    """
+    midi_files = []
+    pieces = ['aof', 'brandenb', 'cantatas', 'cellosui', 'chorales', 'fugues', 'gold', 'invent',
+              'organ', 'organcho', 'partitas', 'sinfon', 'suites', 'wtcbki', 'wtcbkii']
+    for p in pieces:
+        data_dir = 'data/bach/' + p
+        for midi_file in get_files(data_dir):
+            midi_files.append(normalize(midi_file)) #normalized file
+
+    return midi_files
+
 
 def get_data():
     """
     Combine all piano rolls into one array, divide into training + testing data, and inputs + labels.
-    :return: train_inputs, train_labels, test_inputs, test_labels
+    :return: train_inputs, train_labels, test_inputs, test_labels, token_to_id, id_to_token, piece_starters
     """
-
-    midi_files = []
-
-    pieces = ['aof', 'brandenb', 'cantatas', 'cellosui', 'chorales', 'fugues', 'gold', 'invent',
-              'organ', 'organcho', 'partitas', 'sinfon', 'suites', 'wtcbki', 'wtcbkii']
-
-    for p in pieces:
-        data_dir = 'data/bach/' + p
-        for midi_file in get_files(data_dir):
-            midi_files.append(normalize(midi_file)) #normalized file 
-
+    midi_files = get_pieces()
     print(len(midi_files), " Midi Files processed for training")
 
-    if len(midi_files) > 0:
-        inputs = piano_roll(midi_files[0])
+        #if len(midi_files) > 0:
+        #inputs = piano_roll(midi_files[0])
+    piece_starters = []
     rolled = []
-    for f in range(1, len(midi_files)):
+    for f in range(0, len(midi_files)):
         roll = piano_roll(midi_files[f])
         rolled.append(roll)
     all_notes = np.concatenate(rolled)
     train_length = int(train_test_split * len(all_notes))
     train_inputs = all_notes[:train_length-1]
-    token_to_id = build_vocab(train_inputs)
+    token_to_id, id_to_token = build_vocab(train_inputs)
+    for f in range(0, len(midi_files)):
+        piece_starters.append(tokens_to_ids(rolled[f][:64], token_to_id))
     train_input_ids = tokens_to_ids(train_inputs, token_to_id)
     train_label_ids = tokens_to_ids(all_notes[1:train_length], token_to_id)
     test_input_ids = tokens_to_ids(all_notes[train_length:-1], token_to_id)
     test_label_ids = tokens_to_ids(all_notes[train_length+1:], token_to_id)
-    return train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id
+    return train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id, id_to_token, piece_starters
 
 
 if __name__ == "__main__":

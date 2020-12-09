@@ -4,6 +4,8 @@ import sys
 import tensorflow as tf
 from preprocessing import *
 from pylab import show, plot, grid, title, xlabel, ylabel
+from random import seed
+from random import randint
 import scipy.stats
 
 
@@ -76,7 +78,7 @@ def train(model, train_inputs, train_labels):
     num_batches = int(len(train_inputs) / model.batch_size)
     losses = []
 
-    for i in range(num_batches):
+    for i in range(3):
         # print("TRAIN BATCH ", i+1, "/", num_batches)
         inputs, labels = get_batch(train_inputs, train_labels, i * model.batch_size, model.batch_size)
 
@@ -119,15 +121,14 @@ def main():
         print("Usage: python main.py <TRAIN/COMPOSE>")
         exit()
     
+    # get all data no matter what, in order to build a full vocabulary
+    train_inputs, train_labels, test_inputs, test_labels, token_to_id, id_to_token, piece_starters = get_data()
+    token_vocab_size = len(token_to_id)
+    
     if sys.argv[1] == "TRAIN":
-        train_inputs, train_labels, test_inputs, test_labels, token_to_id = get_data()
-
-        token_vocab_size = len(token_to_id)
-        m = Model(token_vocab_size)
-
         # TODO should we shuffle the inputs?
-
-        epochs = 15
+        m = Model(token_vocab_size)
+        epochs = 1
         losses = []
         for i in range(epochs):
             print("Train epoch ", i + 1, " out of ", epochs)
@@ -135,7 +136,8 @@ def main():
             losses += epoch_losses
         
         # save model weights
-        m.save_weights('saved_weights')
+        #tf.saved_model.save(m, 'saved_model')
+        m.save_weights('weights')
 
         visualize_loss(losses)
 
@@ -146,10 +148,37 @@ def main():
         p_value = 1 - scipy.stats.binom.cdf(num_correct-1, len(test_inputs), 1 / token_vocab_size)
         print("p-value: ", p_value)
     else:
-        model = create_model()
-        model.load_weights('saved_weights')
-        # TODO: compose music
+        #m = tf.saved_model.load('saved_model')
+        m = Model(8146)
+        m.load_weights('weights').expect_partial()
 
+        # Choose a random piece starter to compose the rest of the song from
+        seed(1)
+        inputs = tf.convert_to_tensor(piece_starters[randint(0, len(piece_starters))])
+        # generate piece with 200 tokens
+        initial_state = None
+        embedding = tf.nn.embedding_lookup(m.E, inputs)
+        probs = None
+        
+        for i in range(800):
+            #embedding = tf.reshape(embedding, [2, 64])
+            # RNN layer
+            whole_seq_out, final_state = m.layer1(tf.expand_dims(embedding, axis=1), initial_state=initial_state)
+            final_seq, final_state = m.layer2(whole_seq_out, initial_state=final_state)
+            #print("FINAL STATE: ", final_state)
+            initial_state = final_state
+            probs = m.dense_layer2(m.dense_layer1(final_state))
+
+        print("MAX: ", tf.math.argmax(probs))
+            #print("FINAL SEQ: ", i, " ", final_seq)
+
+    # generate music by feeding a short seed sequence into our trained model. We generate new tokens
+    # from the output distribution from our softmax and feed the new tokens back into our model. We used
+    # a combination of two different sampling schemes: one which chooses the token with maximum
+    # predicted probability and one which chooses a token from the entire softmax distribution
+
+    # idea: have a few different sample starter tracks, choose one randomly whenever this is run,
+    # generate new tokens and get midi output
 
 if __name__ == '__main__':
     main()
