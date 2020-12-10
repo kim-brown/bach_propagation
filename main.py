@@ -130,7 +130,6 @@ def main():
     if sys.argv[1] == "TRAIN":
         # TODO should we shuffle the inputs?
         m = Model(token_vocab_size)
-        num_repetitions = 200
         epochs = 8
         losses = []
         for i in range(epochs):
@@ -152,6 +151,7 @@ def main():
     else:
         m = Model(len(token_to_id))
         m.load_weights('weights').expect_partial()
+        num_repetitions = 200
 
         # Choose a random piece starter to compose the rest of the song from
         seed()
