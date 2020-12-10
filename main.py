@@ -8,6 +8,7 @@ from random import seed
 from random import randint
 import scipy.stats
 from preprocess_test import piano_roll_to_midi
+import tensorflow_probability as tfp
 
 
 class Model(tf.keras.Model):
@@ -129,6 +130,7 @@ def main():
     if sys.argv[1] == "TRAIN":
         # TODO should we shuffle the inputs?
         m = Model(token_vocab_size)
+        num_repetitions = 200
         epochs = 8
         losses = []
         for i in range(epochs):
@@ -137,7 +139,6 @@ def main():
             losses += epoch_losses
         
         # save model weights
-        #tf.saved_model.save(m, 'saved_model')
         m.save_weights('weights')
 
         visualize_loss(losses)
@@ -149,35 +150,38 @@ def main():
         p_value = 1 - scipy.stats.binom.cdf(num_correct-1, len(test_inputs), 1 / token_vocab_size)
         print("p-value: ", p_value)
     else:
-        #m = tf.saved_model.load('saved_model')
         m = Model(len(token_to_id))
         m.load_weights('weights').expect_partial()
 
         # Choose a random piece starter to compose the rest of the song from
-        seed(5)
+        seed()
         inputs = tf.convert_to_tensor(piece_starters[randint(0, len(piece_starters))])
-        # generate piece with 200 tokens
+        #print("INPUTS: ", inputs)
         initial_state = None
-        embedding = tf.nn.embedding_lookup(m.E, inputs)
-        probs = None
+        out_sequence = inputs
         
-        for i in range(200):
-            #embedding = tf.reshape(embedding, [2, 64])
-            # RNN layer
+        for i in range(num_repetitions):
+            embedding = tf.nn.embedding_lookup(m.E, out_sequence)
             whole_seq_out, final_state = m.layer1(tf.expand_dims(embedding, axis=1), initial_state=initial_state)
             final_seq, final_state = m.layer2(whole_seq_out, initial_state=final_state)
-            #print("FINAL STATE: ", final_state)
             initial_state = final_state
-            probs = m.dense_layer2(m.dense_layer1(final_state))
-
-        print("MAX: ", tf.math.argmax(probs))
-        # print("FINAL SEQ: ", i, " ", final_seq)
-
-        out_sequence = tf.math.argmax(probs, 1)
+            probs = m.dense_layer2(m.dense_layer1(initial_state))
+            #out_sequence = tf.math.argmax(probs, 1)
+            
+            # sample the probability distribution to generate new notes
+            out_sequence = []
+            for i in range(64):
+                out = np.random.choice(len(token_to_id), 1, True, np.array(probs[i]))[0]
+                out_sequence.append(out)
+                    
+            out_sequence =tf.convert_to_tensor(out_sequence)
+        
+        #print("OUT SEQ: ", out_sequence, " LEN: ", out_sequence.shape)
         pr = list(map(lambda x: id_to_token[x.numpy()], out_sequence))
         midi_file = piano_roll_to_midi(pr, 60)
         midi_file.ticks_per_beat = 120
         midi_file.save("output_test.mid")
+        print("Finished!")
 
 
 
