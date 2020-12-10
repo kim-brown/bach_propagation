@@ -4,7 +4,7 @@ import os
 
 
 # below functions are taken from here: https://github.com/sarthak15169/Deep-Music/blob/master/play.py
-# just to play around with the midi files, this is not our code!!
+# this is ONLY to listen to midi files, this is not our code!!
 
 def play_music(music_file):
     """
@@ -25,6 +25,7 @@ def play_music(music_file):
 
     time.sleep(1)
 
+
 def play_midi(midi_file):
     freq = 44100    # audio CD quality
     bitsize = -16   # unsigned 16 bit
@@ -43,11 +44,11 @@ def play_midi(midi_file):
         pygame.mixer.music.stop()
         raise SystemExit
 
+
 if __name__ == "__main__":
 
     script_dir = os.path.dirname(__file__)
     rel_path = "data/Bach/cantatas/jesu1.mid"
-    rel_path = "output_test.mid"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     with open(abs_file_path) as song_file:

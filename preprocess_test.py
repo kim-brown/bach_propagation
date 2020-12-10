@@ -1,8 +1,7 @@
-from preprocessing import get_files, normalize, piano_roll
+from preprocessing import normalize, piano_roll
 from mido import MidiFile, MidiTrack, Message
 from play import play_midi
 import os
-
 
 
 def piano_roll_to_midi(piano_roll, interval):
@@ -79,7 +78,6 @@ if __name__ == "__main__":
 
     # delete the saved midi file
     os.remove(rel_path)
-
 
     # play the original (before preprocessing):
     with open(original_path) as song_file:

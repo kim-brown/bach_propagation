@@ -1,7 +1,5 @@
 from mido import MidiFile, MetaMessage
-from play import play_midi
 import os
-import music21
 import numpy as np
 
 
@@ -9,6 +7,7 @@ import numpy as np
 
 train_test_split = 0.8
 piece_starter_len = 80 # num tokens to start the model with for composing music
+
 
 def get_files(data_dir):
     """
@@ -19,12 +18,8 @@ def get_files(data_dir):
     for file in os.listdir(data_dir):
         if file.endswith(".mid"):
             path = os.path.join(data_dir, file)
-            #score = music21.converter.parse(path) #Error: 'badly formed midi string: missing leading MTrk'
-            #key = score.analyze('key')
-            #print(key)
             try:
                 midi_files.append(MidiFile(path)) #adds the normalized data
-                #print(path)
             except OSError:
                 continue
             except EOFError:
@@ -43,14 +38,10 @@ def normalize(midi_file):
     key = "C" #if there's no key
     
     for i, track in enumerate(midi_file.tracks):
-        #max_tracks = max(max_tracks, len(midi_file.tracks))
-        # print('Track {}: {}'.format(i, track.name))
-        # I think this makes all the songs the same tempo? not sure
-        # TODO: normalize midi_file so the tempos the same
+        # normalize midi_file so the tempos the same
         midi_file.ticks_per_beat = 120
-        # TODO: normalize midi_file so it's in C
-        
-        
+
+        # normalize midi_file so it's in C
         for msg in track: 
             if isinstance(msg, MetaMessage):
                 if msg.type == 'key_signature':
@@ -70,31 +61,8 @@ def normalize(midi_file):
                     msg.note += difference
             continue
 
-
     return midi_file
     # return sNew #music21.midi.translate.streamToMidiFile(sNew)
-
-
-"""max_tracks = 0
-for file in get_files('data/bach/aof'):
-    print("Processing file ", file)
-    normalize(file)
-    # print(normalize(file))
-    # score = music21.converter.parse("data/Bach/Fugue/"+file)
-    # k = score.analyze('key')
-    # print("file key", k)
-    for i, track in enumerate(file.tracks):
-        max_tracks = max(max_tracks, len(file.tracks))
-        # print('Track {}: {}'.format(i, track.name))
-        # I think this makes all the songs the same tempo? not sure
-        for msg in track:
-            if isinstance(msg, MetaMessage):
-                if msg.type == 'set_tempo':
-                    tempo = int((60.0 / 120) * 1000000)  # 60/bpm
-                    msg = MetaMessage('set_tempo', tempo=tempo)
-                print(msg)
-            continue"""
-
 
 
 def sample_midi_track(track, interval, num_samples):
@@ -119,7 +87,6 @@ def sample_midi_track(track, interval, num_samples):
     samples = np.zeros(num_samples, dtype=np.int32)
     
     for msg in track:
-        #print(msg)
         next_msg_time += msg.time
         while cur_time < next_msg_time:
             # if msg.type=='note_off', add the note (since this means it's
@@ -164,7 +131,6 @@ def piano_roll(midi_file):
     piano_roll = np.sort(piano_roll)
     piano_roll = np.array(["-".join([str(note) for note in notes]) for notes in piano_roll])
 
-    #print(piano_roll[:50])
     return piano_roll
 
 
@@ -196,7 +162,9 @@ def build_vocab(tokens):
             # id_to_token[highest_id] = token_to_id[t]
             id_to_token[highest_id] = t
             highest_id += 1
+
     return token_to_id, id_to_token
+
 
 def tokens_to_ids(tokens, token_to_id):
     ids = []
@@ -205,7 +173,9 @@ def tokens_to_ids(tokens, token_to_id):
             ids.append(token_to_id[t])
         else:
             ids.append(0) # not sure if there are any consequences to this
+
     return ids
+
 
 def get_pieces():
     """
@@ -231,23 +201,25 @@ def get_data():
     midi_files = get_pieces()
     print(len(midi_files), " Midi Files processed for training")
 
-        #if len(midi_files) > 0:
-        #inputs = piano_roll(midi_files[0])
     piece_starters = []
     rolled = []
     for f in range(0, len(midi_files)):
         roll = piano_roll(midi_files[f])
         rolled.append(roll)
+
     all_notes = np.concatenate(rolled)
     train_length = int(train_test_split * len(all_notes))
     train_inputs = all_notes[:train_length-1]
     token_to_id, id_to_token = build_vocab(train_inputs)
+
     for f in range(0, len(midi_files)):
         piece_starters.append(tokens_to_ids(rolled[f][:64], token_to_id))
+
     train_input_ids = tokens_to_ids(train_inputs, token_to_id)
     train_label_ids = tokens_to_ids(all_notes[1:train_length], token_to_id)
     test_input_ids = tokens_to_ids(all_notes[train_length:-1], token_to_id)
     test_label_ids = tokens_to_ids(all_notes[train_length+1:], token_to_id)
+
     return train_input_ids, train_label_ids, test_input_ids, test_label_ids, token_to_id, id_to_token, piece_starters
 
 

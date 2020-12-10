@@ -1,5 +1,3 @@
-import numpy as np
-import os
 import sys
 import tensorflow as tf
 from preprocessing import *
@@ -8,7 +6,6 @@ from random import seed
 from random import randint
 import scipy.stats
 from preprocess_test import piano_roll_to_midi
-import tensorflow_probability as tfp
 
 
 class Model(tf.keras.Model):
@@ -128,7 +125,6 @@ def main():
     token_vocab_size = len(token_to_id)
     
     if sys.argv[1] == "TRAIN":
-        # TODO should we shuffle the inputs?
         m = Model(token_vocab_size)
         epochs = 8
         losses = []
@@ -166,7 +162,6 @@ def main():
             final_seq, final_state = m.layer2(whole_seq_out, initial_state=final_state)
             initial_state = final_state
             probs = m.dense_layer2(m.dense_layer1(initial_state))
-            #out_sequence = tf.math.argmax(probs, 1)
             
             # sample the probability distribution to generate new notes
             out_sequence = []
@@ -181,17 +176,22 @@ def main():
         midi_file = piano_roll_to_midi(pr, 60)
         midi_file.ticks_per_beat = 120
         midi_file.save("output_test.mid")
+
         print("Finished!")
+        return
 
-
-
-    # generate music by feeding a short seed sequence into our trained model. We generate new tokens
-    # from the output distribution from our softmax and feed the new tokens back into our model. We used
-    # a combination of two different sampling schemes: one which chooses the token with maximum
-    # predicted probability and one which chooses a token from the entire softmax distribution
-
-    # idea: have a few different sample starter tracks, choose one randomly whenever this is run,
-    # generate new tokens and get midi output
 
 if __name__ == '__main__':
     main()
+
+"""    
+We generate music by feeding a short seed sequence into our trained model. We generate new tokens
+from the output distribution from our softmax and feed the new tokens back into our model. We used
+a combination of two different sampling schemes: one which chooses the token with maximum
+predicted probability and one which chooses a token from the entire softmax distribution
+
+Idea: have a few different sample starter tracks, choose one randomly whenever this is run,
+generate new tokens and get midi output
+"""
+
+
